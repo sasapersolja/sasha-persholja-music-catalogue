@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{PAGE_TITLE}}</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="{{CANONICAL}}">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#050505">
+
+  <meta property="og:type" content="music.song">
+  <meta property="og:site_name" content="{{ARTIST}} Music Catalogue">
+  <meta property="og:title" content="{{OG_TITLE}}">
+  <meta property="og:description" content="{{DESCRIPTION}}">
+  <meta property="og:url" content="{{CANONICAL}}">
+  <meta property="og:image" content="{{COVER_ABSOLUTE}}">
+  <meta property="og:image:alt" content="{{COVER_ALT}}">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{OG_TITLE}}">
+  <meta name="twitter:description" content="{{DESCRIPTION}}">
+  <meta name="twitter:image" content="{{COVER_ABSOLUTE}}">
+  <meta name="twitter:image:alt" content="{{COVER_ALT}}">
+
+  <link rel="preload" href="{{COVER}}" as="image" type="image/webp" fetchpriority="high">
+  <link rel="stylesheet" href="/assets/styles.css">
+  {{GA_HEAD}}
+  <script type="application/ld+json">{{SCHEMA}}</script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">{{ARTIST}}</a>
+    <span class="catalogue-label">Music Catalogue</span>
+  </header>
+
+  <main>
+    <article class="song" data-song-slug="{{SLUG}}">
+      <section class="hero">
+        <img class="cover" src="{{COVER}}" alt="{{COVER_ALT}}" width="1200" height="1200" fetchpriority="high">
+        <div class="hero-copy">
+          <p class="eyebrow">Sasha Persholja · Official Release</p>
+          <h1>{{TITLE}}</h1>
+          <p class="description">{{DESCRIPTION}}</p>
+          <div class="platforms" aria-label="Listen to {{TITLE}}">
+            {{PLATFORM_LINKS}}
+          </div>
+        </div>
+      </section>
+
+      {{VIDEO_SECTION}}
+
+      <section class="lyrics" aria-labelledby="lyrics-title">
+        <h2 id="lyrics-title">Lyrics</h2>
+        <div class="lyrics-text">{{LYRICS}}</div>
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    <p>© Sasha Persholja · Fejkavangard Music</p>
+  </footer>
+
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
