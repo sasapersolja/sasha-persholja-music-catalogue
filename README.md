@@ -30,6 +30,17 @@ Generated output includes:
 - `dist/_headers` – Cloudflare Pages headers
 - shared CSS, JavaScript, favicon, manifest and WebP covers
 
+The build fails with a clear message when:
+
+- `baseUrl` is missing, invalid, non-HTTPS or still uses `catalogue.example.com`
+- duplicate or invalid song slugs exist
+- required song fields are missing
+- descriptions or lyrics are empty
+- a referenced cover file does not exist
+- platform URLs use invalid or unsafe protocols
+- video configuration or video URLs are invalid
+- a YouTube embed does not use `www.youtube-nocookie.com`
+
 ## Cloudflare Pages deployment
 
 Create a new Cloudflare Pages project for this repository only. Do not connect it to the existing `sashapersholja.com` production project.
@@ -55,16 +66,22 @@ Recommended setup:
 6. Use `npm run build` as the build command.
 7. Use `dist` as the build output directory.
 8. Leave the root directory empty or `/`.
-9. Deploy to the temporary `pages.dev` address first.
+9. Deploy only to the separate `pages.dev` project.
 10. Do not add `sashapersholja.com` as a custom domain.
+
+The configured catalogue URL is currently:
+
+```text
+https://sasha-persholja-music-catalogue.pages.dev
+```
+
+It is used only to generate canonical URLs, sitemap entries and `robots.txt`. Creating or editing this repository does not deploy the site or connect a domain.
 
 The repository also contains `wrangler.toml` with:
 
 ```toml
 pages_build_output_dir = "./dist"
 ```
-
-This supports Wrangler-based Pages deployment as well.
 
 ### Optional Wrangler deployment
 
@@ -74,17 +91,13 @@ After authenticating Wrangler:
 npx wrangler pages deploy dist --project-name sasha-persholja-music-catalogue
 ```
 
-## Important before public launch
+Do not run this command until the Cloudflare Pages project is intentionally ready for deployment.
 
-Open `data/site.json` and replace:
+## Cache policy
 
-```json
-"baseUrl": "https://catalogue.example.com"
-```
-
-with the final separate catalogue domain or the assigned Cloudflare Pages URL. This controls canonical URLs, `robots.txt` and `sitemap.xml`.
-
-Do not use the existing live website domain until a deliberate migration or subdomain plan is approved.
+- `assets/covers/*` uses one-year immutable caching because cover filenames are expected to change when the image changes.
+- `assets/styles.css` and `assets/app.js` use short, revalidated caching because their filenames are not content-hashed.
+- sitemap and robots use short revalidated caching.
 
 ## Add a new song
 
@@ -98,7 +111,7 @@ Place it here:
 assets/covers/my-new-song.webp
 ```
 
-Do not commit WAV files, large MP3 files or large videos. Host large media externally and reference it by URL.
+Do not commit WAV files, large MP3 files or large videos. Host large media externally and reference it by HTTPS URL.
 
 ### 2. Add one JSON object
 
@@ -137,7 +150,7 @@ For a song without a video:
 "video": null
 ```
 
-Empty platform URLs are not rendered.
+Empty platform URLs are not rendered. Non-empty platform URLs must use HTTPS.
 
 ### 3. Build
 
@@ -152,9 +165,22 @@ dist/my-new-song/index.html
 dist/sitemap.xml
 ```
 
+## SEO generated for the homepage
+
+The generated catalogue homepage includes:
+
+- Google Analytics using `measurementId`
+- canonical URL
+- robots meta
+- Open Graph metadata
+- Twitter/X Card metadata
+- favicon and manifest
+- Schema.org `WebSite` and `Person`
+- accessible `h1` and `h2` structure
+
 ## SEO generated for every song
 
-Each generated page includes:
+Each generated song page includes:
 
 - canonical URL
 - Open Graph metadata
@@ -175,7 +201,20 @@ platform: bandcamp | appleMusic | amazonMusic | spotify | youtubeMusic
 song_slug: the song slug
 ```
 
+Tracking uses `transport_type: beacon`, an `event_callback` and a short fallback timeout. Links opening in a new tab are never delayed or blocked by Analytics.
+
 Set `measurementId` to an empty string to disable Google Analytics.
+
+## Continuous integration
+
+GitHub Actions runs `npm run build` and verifies:
+
+- generated homepage
+- demo song page
+- required assets
+- sitemap XML validity
+- HTTPS production URLs
+- absence of `catalogue.example.com` anywhere in `dist`
 
 ## Project structure
 
@@ -187,7 +226,7 @@ public/                 Files copied directly into dist
 templates/song.html     Reusable song-page template
 src/styles.css          Shared styles
 src/app.js              Shared Analytics event tracking
-scripts/build.mjs       Static site, robots and sitemap generator
+scripts/build.mjs       Validating static site, robots and sitemap generator
 scripts/clean.mjs       Removes generated output
 wrangler.toml           Cloudflare Pages output configuration
 dist/                   Generated static site; not committed
