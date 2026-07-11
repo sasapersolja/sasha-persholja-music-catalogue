@@ -1,0 +1,19 @@
+{
+  "name": "Sasha Persholja Music Catalogue",
+  "short_name": "Sasha Persholja",
+  "description": "Official song catalogue for Sasha Persholja.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
