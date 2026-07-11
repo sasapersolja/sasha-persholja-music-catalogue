@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "renegade-shoes",
+    "title": "Renegade Shoes",
+    "description": "Renegade Shoes by Sasha Persholja – blues rock, funk and alternative energy from the Fejkavangard catalogue.",
+    "cover": "/assets/covers/renegade-shoes.webp",
+    "coverAlt": "Renegade Shoes by Sasha Persholja cover artwork",
+    "lyrics": [
+      "Official lyrics will be added by Sasha Persholja."
+    ],
+    "video": null,
+    "platforms": {
+      "bandcamp": "",
+      "appleMusic": "",
+      "amazonMusic": "",
+      "spotify": "",
+      "youtubeMusic": ""
+    },
+    "releaseDate": "",
+    "genres": ["Blues Rock", "Funk", "Alternative"]
+  }
+]
