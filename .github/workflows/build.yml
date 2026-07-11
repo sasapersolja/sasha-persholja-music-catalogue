@@ -1,0 +1,41 @@
+name: Verify static build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Build static website
+        run: npm run build
+
+      - name: Verify Cloudflare Pages output
+        run: |
+          test -f dist/index.html
+          test -f dist/renegade-shoes/index.html
+          test -f dist/sitemap.xml
+          test -f dist/robots.txt
+          test -f dist/_headers
+          test -f dist/site.webmanifest
+          test -f dist/favicon.svg
+          test -f dist/assets/styles.css
+          test -f dist/assets/app.js
+          test -f dist/assets/covers/renegade-shoes.webp
+          grep -q "renegade-shoes" dist/sitemap.xml
+          grep -q "MusicRecording" dist/renegade-shoes/index.html
