@@ -78,11 +78,11 @@ function schema(song, canonical) {
 }
 
 await rm(dist, { recursive: true, force: true });
+await mkdir(dist, { recursive: true });
 await mkdir(path.join(dist, 'assets', 'covers'), { recursive: true });
 await cp(path.join(root, 'src/styles.css'), path.join(dist, 'assets/styles.css'));
 await cp(path.join(root, 'src/app.js'), path.join(dist, 'assets/app.js'));
-await cp(path.join(root, 'public/favicon.svg'), path.join(dist, 'favicon.svg'));
-await cp(path.join(root, 'public/site.webmanifest'), path.join(dist, 'site.webmanifest'));
+await cp(path.join(root, 'public'), dist, { recursive: true });
 await cp(path.join(root, 'assets/covers'), path.join(dist, 'assets/covers'), { recursive: true });
 
 for (const song of songs) {
@@ -112,11 +112,12 @@ for (const song of songs) {
 }
 
 const cards = songs.map((song) => `<li><a href="/${song.slug}/"><img src="${escapeHtml(song.cover)}" alt="${escapeHtml(song.coverAlt)}" width="600" height="600" loading="lazy"><span>${escapeHtml(song.title)}</span></a></li>`).join('');
-const index = `<!doctype html><html lang="${escapeHtml(site.language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(site.siteTitle)}</title><meta name="description" content="${escapeHtml(site.siteDescription)}"><link rel="canonical" href="${site.baseUrl}/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/styles.css"></head><body><header class="site-header"><a class="brand" href="/">${escapeHtml(site.artist)}</a><span class="catalogue-label">Music Catalogue</span></header><main class="song"><p class="eyebrow">Official Catalogue</p><h1>${escapeHtml(site.artist)}</h1><ul class="catalogue-grid">${cards}</ul></main></body></html>`;
+const index = `<!doctype html><html lang="${escapeHtml(site.language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(site.siteTitle)}</title><meta name="description" content="${escapeHtml(site.siteDescription)}"><link rel="canonical" href="${site.baseUrl}/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/site.webmanifest"><link rel="stylesheet" href="/assets/styles.css"></head><body><header class="site-header"><a class="brand" href="/">${escapeHtml(site.artist)}</a><span class="catalogue-label">Music Catalogue</span></header><main class="song"><p class="eyebrow">Official Catalogue</p><h1>${escapeHtml(site.artist)}</h1><ul class="catalogue-grid">${cards}</ul></main></body></html>`;
 await writeFile(path.join(dist, 'index.html'), index);
 
 const urls = [`${site.baseUrl.replace(/\/$/, '')}/`, ...songs.map((song) => `${site.baseUrl.replace(/\/$/, '')}/${song.slug}/`)];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((url) => `  <url><loc>${url}</loc></url>`).join('\n')}\n</urlset>\n`;
 await writeFile(path.join(dist, 'sitemap.xml'), sitemap);
 await writeFile(path.join(dist, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${site.baseUrl.replace(/\/$/, '')}/sitemap.xml\n`);
+
 console.log(`Built ${songs.length} song page(s) in dist/.`);
