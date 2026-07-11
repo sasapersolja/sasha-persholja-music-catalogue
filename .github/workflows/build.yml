@@ -25,7 +25,7 @@ jobs:
       - name: Build static website
         run: npm run build
 
-      - name: Verify Cloudflare Pages output
+      - name: Verify required Cloudflare Pages output
         run: |
           test -f dist/index.html
           test -f dist/renegade-shoes/index.html
@@ -37,5 +37,49 @@ jobs:
           test -f dist/assets/styles.css
           test -f dist/assets/app.js
           test -f dist/assets/covers/renegade-shoes.webp
-          grep -q "renegade-shoes" dist/sitemap.xml
-          grep -q "MusicRecording" dist/renegade-shoes/index.html
+
+      - name: Verify generated homepage SEO
+        run: |
+          grep -q '<meta name="robots"' dist/index.html
+          grep -q '<link rel="canonical"' dist/index.html
+          grep -q 'property="og:title"' dist/index.html
+          grep -q 'name="twitter:title"' dist/index.html
+          grep -q 'googletagmanager.com/gtag/js' dist/index.html
+          grep -q '"@type":"WebSite"' dist/index.html
+          grep -q '"@type":"Person"' dist/index.html
+          grep -q '<h1>Sasha Persholja</h1>' dist/index.html
+          grep -q '<h2 id="releases-title">Songs</h2>' dist/index.html
+
+      - name: Verify demo song page
+        run: |
+          grep -q 'MusicRecording' dist/renegade-shoes/index.html
+          grep -q '<link rel="canonical"' dist/renegade-shoes/index.html
+          grep -q 'property="og:title"' dist/renegade-shoes/index.html
+          grep -q 'name="twitter:title"' dist/renegade-shoes/index.html
+
+      - name: Validate sitemap XML and production URLs
+        run: |
+          python - <<'PY'
+          import pathlib
+          import urllib.parse
+          import xml.etree.ElementTree as ET
+
+          sitemap = pathlib.Path('dist/sitemap.xml')
+          root = ET.parse(sitemap).getroot()
+          ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          urls = [node.text for node in root.findall('sm:url/sm:loc', ns)]
+          assert urls, 'sitemap.xml contains no URLs'
+          for value in urls:
+              parsed = urllib.parse.urlparse(value)
+              assert parsed.scheme == 'https', f'Non-HTTPS sitemap URL: {value}'
+              assert parsed.netloc, f'Invalid sitemap URL: {value}'
+              assert 'catalogue.example.com' not in value, f'Placeholder URL remains: {value}'
+          print(f'Validated {len(urls)} sitemap URL(s).')
+          PY
+
+      - name: Verify no placeholder domain remains
+        run: |
+          if grep -R "catalogue.example.com" dist; then
+            echo "catalogue.example.com must not appear in dist"
+            exit 1
+          fi
