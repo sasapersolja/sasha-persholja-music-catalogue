@@ -1,13 +1,13 @@
 # Sasha Persholja Music Catalogue
 
-A lightweight, zero-dependency static website generator for Sasha Persholja song pages. It is designed to scale beyond 50 releases while keeping one shared template and one JSON catalogue.
+A lightweight, zero-dependency static website generator for Sasha Persholja song pages. It scales beyond 50 releases while keeping one shared template and one JSON catalogue.
 
 This repository is completely separate from `sasapersolja/big-black-puppet-independent` and is not connected to the current live website.
 
 ## Requirements
 
-- Node.js 18 or newer
-- No npm dependencies
+- Node.js 20 recommended; Node.js 18 or newer supported
+- No npm dependencies are required for the site build
 
 ## Build
 
@@ -15,13 +15,7 @@ This repository is completely separate from `sasapersolja/big-black-puppet-indep
 npm run build
 ```
 
-The complete static website is generated in:
-
-```text
-dist/
-```
-
-Generated output includes:
+The complete static website is generated in `dist/`:
 
 - `dist/index.html` – catalogue homepage
 - `dist/<song-slug>/index.html` – clean song URLs
@@ -41,57 +35,118 @@ The build fails with a clear message when:
 - video configuration or video URLs are invalid
 - a YouTube embed does not use `www.youtube-nocookie.com`
 
-## Cloudflare Pages deployment
+## Automatic Cloudflare Pages deployment
 
-Create a new Cloudflare Pages project for this repository only. Do not connect it to the existing `sashapersholja.com` production project.
-
-Use these settings:
+The workflow is:
 
 ```text
+.github/workflows/deploy-pages.yml
+```
+
+It runs automatically on every push to `main` and can also be started manually. It:
+
+1. checks out the repository,
+2. uses Node.js 20,
+3. runs `npm run build`,
+4. checks whether the separate Cloudflare Pages project exists,
+5. creates `sasha-persholja-music-catalogue` when missing,
+6. deploys `dist` to the `main` production branch with Wrangler.
+
+The workflow deploys only to the separate Cloudflare Pages project. It does not add or connect a custom domain.
+
+### Required Cloudflare API token permission
+
+Create a custom Cloudflare API token with exactly this account permission:
+
+```text
+Account → Cloudflare Pages → Edit
+```
+
+Restrict the token to the Cloudflare account that will own the catalogue project. Do not reuse the old Big Black Puppet token.
+
+The workflow reads credentials only from these GitHub repository secrets:
+
+```text
+CLOUDFLARE_API_TOKEN
+CLOUDFLARE_ACCOUNT_ID
+```
+
+Nothing sensitive is stored in repository files.
+
+## Add the two GitHub secrets on a Samsung Galaxy or other mobile phone
+
+Use a browser such as Chrome on the phone. The GitHub mobile app may not expose all repository Settings pages, so use the GitHub website.
+
+### Secret 1: CLOUDFLARE_API_TOKEN
+
+1. Open Chrome.
+2. Sign in to GitHub.
+3. Open:
+   `https://github.com/sasapersolja/sasha-persholja-music-catalogue`
+4. Tap the browser menu with three dots.
+5. Enable **Desktop site** if the repository **Settings** tab is not visible.
+6. Tap **Settings** in the repository navigation.
+7. In the left menu, open **Secrets and variables**.
+8. Tap **Actions**.
+9. Tap **New repository secret**.
+10. In **Name**, enter exactly:
+
+```text
+CLOUDFLARE_API_TOKEN
+```
+
+11. In **Secret**, paste the new Cloudflare API token.
+12. Tap **Add secret**.
+
+### Secret 2: CLOUDFLARE_ACCOUNT_ID
+
+1. Stay on **Settings → Secrets and variables → Actions**.
+2. Tap **New repository secret** again.
+3. In **Name**, enter exactly:
+
+```text
+CLOUDFLARE_ACCOUNT_ID
+```
+
+4. In **Secret**, paste the Cloudflare account ID.
+5. Tap **Add secret**.
+
+The account ID is visible in the Cloudflare dashboard account overview. It is not the zone ID and not an API token.
+
+After saving, GitHub shows the secret names but never reveals their values again. If a value is wrong, replace that secret with the correct value.
+
+## Manually run the deployment workflow
+
+1. Open the repository on GitHub:
+   `https://github.com/sasapersolja/sasha-persholja-music-catalogue`
+2. Tap **Actions**.
+3. Select **Deploy to Cloudflare Pages**.
+4. Tap **Run workflow**.
+5. Confirm the branch is `main`.
+6. Tap the green **Run workflow** button.
+7. Open the new workflow run to follow the build and deployment logs.
+
+The workflow can also run automatically when a commit is pushed to `main`.
+
+## Cloudflare project details
+
+```text
+Project name: sasha-persholja-music-catalogue
 Production branch: main
-Framework preset: None
 Build command: npm run build
-Build output directory: dist
-Root directory: /
-Node.js version: 18 or newer
+Output directory: dist
+Expected Pages address: https://sasha-persholja-music-catalogue.pages.dev
 ```
 
-Recommended setup:
-
-1. Open Cloudflare Dashboard.
-2. Go to **Workers & Pages**.
-3. Select **Create application → Pages → Connect to Git**.
-4. Choose `sasapersolja/sasha-persholja-music-catalogue`.
-5. Set the production branch to `main`.
-6. Use `npm run build` as the build command.
-7. Use `dist` as the build output directory.
-8. Leave the root directory empty or `/`.
-9. Deploy only to the separate `pages.dev` project.
-10. Do not add `sashapersholja.com` as a custom domain.
-
-The configured catalogue URL is currently:
-
-```text
-https://sasha-persholja-music-catalogue.pages.dev
-```
-
-It is used only to generate canonical URLs, sitemap entries and `robots.txt`. Creating or editing this repository does not deploy the site or connect a domain.
-
-The repository also contains `wrangler.toml` with:
-
-```toml
-pages_build_output_dir = "./dist"
-```
-
-### Optional Wrangler deployment
-
-After authenticating Wrangler:
+The deployment command is:
 
 ```bash
-npx wrangler pages deploy dist --project-name sasha-persholja-music-catalogue
+npx --yes wrangler@4 pages deploy dist \
+  --project-name=sasha-persholja-music-catalogue \
+  --branch=main
 ```
 
-Do not run this command until the Cloudflare Pages project is intentionally ready for deployment.
+Do not add `sashapersholja.com` as a custom domain.
 
 ## Cache policy
 
@@ -165,31 +220,11 @@ dist/my-new-song/index.html
 dist/sitemap.xml
 ```
 
-## SEO generated for the homepage
+## SEO
 
-The generated catalogue homepage includes:
+The generated homepage includes Google Analytics, canonical, robots meta, Open Graph, Twitter/X Card, favicon, manifest, and Schema.org `WebSite` and `Person` data.
 
-- Google Analytics using `measurementId`
-- canonical URL
-- robots meta
-- Open Graph metadata
-- Twitter/X Card metadata
-- favicon and manifest
-- Schema.org `WebSite` and `Person`
-- accessible `h1` and `h2` structure
-
-## SEO generated for every song
-
-Each generated song page includes:
-
-- canonical URL
-- Open Graph metadata
-- Twitter/X Card metadata
-- Schema.org `MusicRecording`
-- artist identity and profile links
-- optimized cover preload
-- robots metadata
-- automatic sitemap entry
+Every song page includes canonical metadata, Open Graph, Twitter/X Cards, Schema.org `MusicRecording`, artist identity, cover preload, robots metadata and an automatic sitemap entry.
 
 ## Google Analytics
 
@@ -203,31 +238,24 @@ song_slug: the song slug
 
 Tracking uses `transport_type: beacon`, an `event_callback` and a short fallback timeout. Links opening in a new tab are never delayed or blocked by Analytics.
 
-Set `measurementId` to an empty string to disable Google Analytics.
-
 ## Continuous integration
 
-GitHub Actions runs `npm run build` and verifies:
-
-- generated homepage
-- demo song page
-- required assets
-- sitemap XML validity
-- HTTPS production URLs
-- absence of `catalogue.example.com` anywhere in `dist`
+The verification workflow runs `npm run build` and checks the generated homepage, demo song page, required assets, sitemap XML validity, HTTPS production URLs and the absence of `catalogue.example.com` in `dist`.
 
 ## Project structure
 
 ```text
-assets/covers/          Optimized WebP song covers
-data/site.json          Shared artist, domain and Analytics settings
-data/songs.json         All song content
-public/                 Files copied directly into dist
-templates/song.html     Reusable song-page template
-src/styles.css          Shared styles
-src/app.js              Shared Analytics event tracking
-scripts/build.mjs       Validating static site, robots and sitemap generator
-scripts/clean.mjs       Removes generated output
-wrangler.toml           Cloudflare Pages output configuration
-dist/                   Generated static site; not committed
+assets/covers/                    Optimized WebP song covers
+data/site.json                    Shared artist, domain and Analytics settings
+data/songs.json                   All song content
+public/                           Files copied directly into dist
+templates/song.html               Reusable song-page template
+src/styles.css                    Shared styles
+src/app.js                        Shared Analytics event tracking
+scripts/build.mjs                 Validating static site generator
+scripts/clean.mjs                 Removes generated output
+.github/workflows/build.yml       Build verification
+.github/workflows/deploy-pages.yml Automatic Cloudflare Pages deployment
+wrangler.toml                     Cloudflare Pages output configuration
+dist/                             Generated static site; not committed
 ```
