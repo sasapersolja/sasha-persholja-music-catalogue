@@ -2,7 +2,7 @@
 
 A lightweight, zero-dependency static website generator for Sasha Persholja song pages. It is designed to scale beyond 50 releases while keeping one shared template and one JSON catalogue.
 
-This repository is completely separate from `sasapersolja/big-black-puppet-independent` and is not connected to `sashapersholja.com`.
+This repository is completely separate from `sasapersolja/big-black-puppet-independent` and is not connected to the current live website.
 
 ## Requirements
 
@@ -15,17 +15,66 @@ This repository is completely separate from `sasapersolja/big-black-puppet-indep
 npm run build
 ```
 
-The generated static website is written to `dist/`:
+The complete static website is generated in:
 
-- `/index.html` – catalogue homepage
-- `/<song-slug>/index.html` – clean song URL
-- `/sitemap.xml` – generated automatically
-- `/robots.txt` – generated automatically
-- shared CSS, JavaScript, favicon and covers
+```text
+dist/
+```
 
-Serve `dist/` with any static host.
+Generated output includes:
 
-## Important before deployment
+- `dist/index.html` – catalogue homepage
+- `dist/<song-slug>/index.html` – clean song URLs
+- `dist/sitemap.xml` – generated automatically
+- `dist/robots.txt` – generated automatically
+- `dist/_headers` – Cloudflare Pages headers
+- shared CSS, JavaScript, favicon, manifest and WebP covers
+
+## Cloudflare Pages deployment
+
+Create a new Cloudflare Pages project for this repository only. Do not connect it to the existing `sashapersholja.com` production project.
+
+Use these settings:
+
+```text
+Production branch: main
+Framework preset: None
+Build command: npm run build
+Build output directory: dist
+Root directory: /
+Node.js version: 18 or newer
+```
+
+Recommended setup:
+
+1. Open Cloudflare Dashboard.
+2. Go to **Workers & Pages**.
+3. Select **Create application → Pages → Connect to Git**.
+4. Choose `sasapersolja/sasha-persholja-music-catalogue`.
+5. Set the production branch to `main`.
+6. Use `npm run build` as the build command.
+7. Use `dist` as the build output directory.
+8. Leave the root directory empty or `/`.
+9. Deploy to the temporary `pages.dev` address first.
+10. Do not add `sashapersholja.com` as a custom domain.
+
+The repository also contains `wrangler.toml` with:
+
+```toml
+pages_build_output_dir = "./dist"
+```
+
+This supports Wrangler-based Pages deployment as well.
+
+### Optional Wrangler deployment
+
+After authenticating Wrangler:
+
+```bash
+npx wrangler pages deploy dist --project-name sasha-persholja-music-catalogue
+```
+
+## Important before public launch
 
 Open `data/site.json` and replace:
 
@@ -33,7 +82,9 @@ Open `data/site.json` and replace:
 "baseUrl": "https://catalogue.example.com"
 ```
 
-with the final catalogue domain. Do this before submitting the generated sitemap to search engines. The new catalogue must not be deployed over the existing Big Black Puppet website.
+with the final separate catalogue domain or the assigned Cloudflare Pages URL. This controls canonical URLs, `robots.txt` and `sitemap.xml`.
+
+Do not use the existing live website domain until a deliberate migration or subdomain plan is approved.
 
 ## Add a new song
 
@@ -51,7 +102,7 @@ Do not commit WAV files, large MP3 files or large videos. Host large media exter
 
 ### 2. Add one JSON object
 
-Open `data/songs.json` and add a new object after the existing demo song:
+Open `data/songs.json` and add a new object:
 
 ```json
 {
@@ -80,13 +131,13 @@ Open `data/songs.json` and add a new object after the existing demo song:
 }
 ```
 
-For a song without a video, use:
+For a song without a video:
 
 ```json
 "video": null
 ```
 
-Platform values may be empty while links are unavailable. Empty links are not rendered.
+Empty platform URLs are not rendered.
 
 ### 3. Build
 
@@ -101,27 +152,6 @@ dist/my-new-song/index.html
 dist/sitemap.xml
 ```
 
-The public URL becomes:
-
-```text
-https://YOUR-CATALOGUE-DOMAIN/my-new-song/
-```
-
-## Song data fields
-
-| Field | Required | Purpose |
-|---|---:|---|
-| `slug` | Yes | Clean URL segment using lowercase letters, numbers and hyphens |
-| `title` | Yes | Song title |
-| `description` | Yes | Meta, Open Graph and page description |
-| `cover` | Yes | Root-relative WebP path |
-| `coverAlt` | Yes | Accessible image description |
-| `lyrics` | Yes | Array of lyric sections |
-| `video` | No | YouTube embed or hosted file configuration |
-| `platforms` | Yes | Streaming and purchase URLs |
-| `releaseDate` | No | ISO date, used in Schema.org when present |
-| `genres` | Yes | Schema.org genre values |
-
 ## SEO generated for every song
 
 Each generated page includes:
@@ -129,7 +159,7 @@ Each generated page includes:
 - canonical URL
 - Open Graph metadata
 - Twitter/X Card metadata
-- `MusicRecording` structured data
+- Schema.org `MusicRecording`
 - artist identity and profile links
 - optimized cover preload
 - robots metadata
@@ -145,7 +175,7 @@ platform: bandcamp | appleMusic | amazonMusic | spotify | youtubeMusic
 song_slug: the song slug
 ```
 
-Set `measurementId` to an empty string to disable Google Analytics for a deployment.
+Set `measurementId` to an empty string to disable Google Analytics.
 
 ## Project structure
 
@@ -153,11 +183,12 @@ Set `measurementId` to an empty string to disable Google Analytics for a deploym
 assets/covers/          Optimized WebP song covers
 data/site.json          Shared artist, domain and Analytics settings
 data/songs.json         All song content
-public/                 Shared public files
+public/                 Files copied directly into dist
 templates/song.html     Reusable song-page template
 src/styles.css          Shared styles
 src/app.js              Shared Analytics event tracking
-scripts/build.mjs       Page, robots and sitemap generator
+scripts/build.mjs       Static site, robots and sitemap generator
 scripts/clean.mjs       Removes generated output
+wrangler.toml           Cloudflare Pages output configuration
 dist/                   Generated static site; not committed
 ```
